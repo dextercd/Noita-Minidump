@@ -1,13 +1,13 @@
 # Noita Minidumps
 
-Crash dumps can help to figure out why the game crashes. `Noita_dev.exe`
+Crash dumps can help figure out why the game crashes. `Noita_dev.exe`
 creates crash dumps in the `crashes/` folder, but for some reason this
 is not enabled for `Noita.exe`.
 
 This Noita mod enables crash dumps for any version of Noita. (GOG/
 Humble/Steam, including older versions.)
 
-dumps are placed stored in `Noita/crashes/minidump_[YEAR-MONTH-DAY]T[TIME].dmp`.
+Dumps are placed stored in `Noita/crashes/minidump_[YEAR-MONTH-DAY]T[TIME].dmp`.
 
 
 ## Analysis
