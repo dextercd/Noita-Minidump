@@ -1,0 +1,4 @@
+<Mod
+    name="Minidump"
+    description="Create minidumps when Noita crashes."
+    request_no_api_restrictions="1" />
