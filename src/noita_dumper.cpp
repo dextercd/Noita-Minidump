@@ -1,10 +1,11 @@
+#include <charconv>
 #include <cstring>
 #include <ctime>
-#include <iterator>
-#include <charconv>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -13,6 +14,14 @@
 #include "dump_communication.hpp"
 
 using namespace std::literals;
+
+[[noreturn]]
+void throw_windows_last_error(const char* what)
+{
+    auto last_error = GetLastError();
+    std::error_code ec{(int)last_error, std::system_category()};
+    throw std::system_error{ec, what};
+}
 
 const char* get_env(const char* envvar)
 {
@@ -59,7 +68,7 @@ void dump_noita(DWORD process_id, HANDLE process)
     auto t = std::time(nullptr);
     std::string name = "crashes\\minidump_" + datetime_string(t) + ".dmp";
 
-    auto file = CreateFileA(
+    auto dmp_file = CreateFileA(
         name.c_str(),
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_WRITE | FILE_SHARE_READ,
@@ -69,15 +78,20 @@ void dump_noita(DWORD process_id, HANDLE process)
         nullptr
     );
 
+    if (dmp_file == INVALID_HANDLE_VALUE)
+        throw_windows_last_error("Couldn't open .dmp file");
+
     auto dump_info_ptr = int_from_env<std::uintptr_t>("NoitaDumpPTR");
 
     dump_communication recv;
-    ReadProcessMemory(
-        process,
-        reinterpret_cast<void*>(dump_info_ptr),
-        &recv, sizeof(recv),
-        nullptr
-    );
+    if (!ReadProcessMemory(
+            process,
+            reinterpret_cast<void*>(dump_info_ptr),
+            &recv, sizeof(recv),
+            nullptr)
+    ) {
+        throw_windows_last_error("Couldn't read dump info from Noita process");
+    }
 
     MINIDUMP_EXCEPTION_INFORMATION exception_info{
         recv.thread_id,
@@ -85,16 +99,18 @@ void dump_noita(DWORD process_id, HANDLE process)
         true
     };
 
-    MiniDumpWriteDump(
-        process, process_id,
-        file,
-        MiniDumpWithDataSegs,
-        &exception_info,
-        nullptr,
-        nullptr
-    );
+    if (!MiniDumpWriteDump(
+            process, process_id,
+            dmp_file,
+            MiniDumpWithDataSegs,
+            &exception_info,
+            nullptr,
+            nullptr)
+    ) {
+        throw_windows_last_error("Couldn't write mini dump");
+    };
 
-    CloseHandle(file);
+    CloseHandle(dmp_file);
 
     auto dump_finished_event = read_env_handle("NoitaDumpFinishedEvent");
     SetEvent(dump_finished_event);
@@ -106,6 +122,9 @@ void run()
     auto process = OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE,
         false, process_id);
+
+    if (process == nullptr)
+        throw_windows_last_error("Couldn't open Noita process");
 
     auto crash_event = read_env_handle("NoitaCrashEvent");
 
@@ -121,7 +140,8 @@ void run()
         INFINITE
     );
 
-    std::cout << wait_result << ": " << GetLastError() << "\n";
+    if (wait_result == WAIT_FAILED)
+        throw_windows_last_error("Couldn't wait on dump request or program exit");
 
     auto triggered_handle = handles[wait_result - WAIT_OBJECT_0];
 
