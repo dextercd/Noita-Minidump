@@ -3,6 +3,8 @@
 #include <iterator>
 #include <charconv>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -10,12 +12,18 @@
 
 #include "dump_communication.hpp"
 
-HANDLE read_env_handle(const char* envvar)
+using namespace std::literals;
+
+const char* get_env(const char* envvar)
 {
     auto envval = std::getenv(envvar);
     if (!envval)
-        std::cerr << "Environment variable: " <<envvar << " does not exist.\n";
+        throw std::runtime_error{"Environment variable "s + envvar + " does not exist."};
+}
 
+HANDLE read_env_handle(const char* envvar)
+{
+    auto envval = get_env(envvar);
     std::uintptr_t handle_int = 0;
     std::from_chars(envval, envval + std::strlen(envval), handle_int);
     return reinterpret_cast<HANDLE>(handle_int);
@@ -23,10 +31,7 @@ HANDLE read_env_handle(const char* envvar)
 
 DWORD read_env_dword(const char* envvar)
 {
-    auto envval = std::getenv(envvar);
-    if (!envval)
-        std::cerr << "Environment variable: " <<envvar << " does not exist.\n";
-
+    auto envval = get_env(envvar);
     DWORD dword = 0;
     std::from_chars(envval, envval + std::strlen(envval), dword);
     return dword;
@@ -50,7 +55,7 @@ void dump_noita(DWORD process_id, HANDLE process)
         nullptr
     );
 
-    auto ptrstr = std::getenv("NoitaDumpPTR");
+    auto ptrstr = get_env("NoitaDumpPTR");
     std::uintptr_t dump_info_ptr = 0;
     std::from_chars(ptrstr, ptrstr + std::strlen(ptrstr), dump_info_ptr);
 
@@ -83,8 +88,7 @@ void dump_noita(DWORD process_id, HANDLE process)
     SetEvent(dump_finished_event);
 }
 
-INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-    PSTR lpCmdLine, INT nCmdShow)
+void run()
 {
     DWORD process_id = read_env_dword("NoitaPID");
     auto process = OpenProcess(
@@ -111,6 +115,20 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     if (triggered_handle == crash_event)
         dump_noita(process_id, process);
+}
+
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+    PSTR lpCmdLine, INT nCmdShow)
+{
+    try {
+        run();
+    } catch(const std::exception& exc) {
+        std::cerr << "Fatal error: " << exc.what() << ".\n";
+        return 1;
+    } catch(...) {
+        std::cerr << "Unknown fatal error.\n";
+        return 2;
+    }
 
     return 0;
 }
