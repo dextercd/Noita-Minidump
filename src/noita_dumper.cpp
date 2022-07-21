@@ -21,20 +21,23 @@ const char* get_env(const char* envvar)
         throw std::runtime_error{"Environment variable "s + envvar + " does not exist."};
 }
 
-HANDLE read_env_handle(const char* envvar)
+template<class T>
+T int_from_env(const char* envvar)
 {
     auto envval = get_env(envvar);
-    std::uintptr_t handle_int = 0;
-    std::from_chars(envval, envval + std::strlen(envval), handle_int);
-    return reinterpret_cast<HANDLE>(handle_int);
+
+    T value{};
+    auto result = std::from_chars(envval, envval + std::strlen(envval), value);
+    if (result.ec != std::errc{})
+        throw std::system_error{std::make_error_code(result.ec)};
+
+    return value;
 }
 
-DWORD read_env_dword(const char* envvar)
+HANDLE read_env_handle(const char* envvar)
 {
-    auto envval = get_env(envvar);
-    DWORD dword = 0;
-    std::from_chars(envval, envval + std::strlen(envval), dword);
-    return dword;
+    auto handle_int = int_from_env<std::uintptr_t>(envvar);
+    return reinterpret_cast<HANDLE>(handle_int);
 }
 
 void dump_noita(DWORD process_id, HANDLE process)
@@ -55,9 +58,7 @@ void dump_noita(DWORD process_id, HANDLE process)
         nullptr
     );
 
-    auto ptrstr = get_env("NoitaDumpPTR");
-    std::uintptr_t dump_info_ptr = 0;
-    std::from_chars(ptrstr, ptrstr + std::strlen(ptrstr), dump_info_ptr);
+    auto dump_info_ptr = int_from_env<std::uintptr_t>("NoitaDumpPTR");
 
     dump_communication recv;
     ReadProcessMemory(
@@ -90,7 +91,7 @@ void dump_noita(DWORD process_id, HANDLE process)
 
 void run()
 {
-    DWORD process_id = read_env_dword("NoitaPID");
+    auto process_id = int_from_env<DWORD>("NoitaPID");
     auto process = OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE,
         false, process_id);
