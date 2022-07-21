@@ -40,16 +40,27 @@ HANDLE read_env_handle(const char* envvar)
     return reinterpret_cast<HANDLE>(handle_int);
 }
 
+std::string datetime_string(std::time_t t)
+{
+    // year month day hour minutes seconds
+    // 4 +  2 +   2 + 2 +  2 +     2       = 14
+    // With separators and '\0'            = 20
+
+    // Year could technically become more digits, so reserve some extra space
+    // for future-proofing.
+    char buffer[99];
+    std::strftime(buffer, sizeof(buffer), "%FT%H-%M-%S", std::gmtime(&t));
+
+    return buffer;
+}
+
 void dump_noita(DWORD process_id, HANDLE process)
 {
-    std::time_t t = std::time(nullptr);
-    char name[300] = "crashes\\minidump_";
-    char* left = name + std::strlen(name);
-    left += std::strftime(left, std::end(name) - left, "%FT%H-%M-%S", std::gmtime(&t));
-    std::strcpy(left, ".dmp");
+    auto t = std::time(nullptr);
+    std::string name = "crashes\\minidump_" + datetime_string(t) + ".dmp";
 
     auto file = CreateFileA(
-        name,
+        name.c_str(),
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_WRITE | FILE_SHARE_READ,
         nullptr,
