@@ -28,6 +28,8 @@ const char* get_env(const char* envvar)
     auto envval = std::getenv(envvar);
     if (!envval)
         throw std::runtime_error{"Environment variable "s + envvar + " does not exist."};
+
+    return envval;
 }
 
 template<class T>
