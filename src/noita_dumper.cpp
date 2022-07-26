@@ -103,7 +103,6 @@ void run()
 {
     auto dump_info_ptr = int_from_env<std::uintptr_t>("NoitaDumpPTR");
     auto crash_event = read_env_handle("NoitaCrashEvent");
-    auto dump_finished_event = read_env_handle("NoitaDumpFinishedEvent");
     auto process_id = int_from_env<DWORD>("NoitaPID");
 
     auto process = OpenProcess(
@@ -138,7 +137,6 @@ void run()
     std::string dump_name = "crashes\\minidump_" + datetime_string(t) + ".dmp";
 
     dump_process(process_id, process, recv.thread_id, recv.exception_pointers, dump_name.c_str());
-    SetEvent(dump_finished_event);
 }
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
