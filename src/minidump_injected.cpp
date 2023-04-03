@@ -1,6 +1,3 @@
-#include <string>
-#include <iostream>
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <dbghelp.h>
@@ -31,11 +28,16 @@ void spawn_dumper_helper()
     };
     crash_event = CreateEvent(&event_sec_attr, true, false, nullptr);
 
-    SetEnvironmentVariable("NoitaPID", std::to_string(GetCurrentProcessId()).c_str());
-    SetEnvironmentVariable("NoitaDumpPTR",
-        std::to_string(reinterpret_cast<std::uintptr_t>(&dump_info)).c_str());
-    SetEnvironmentVariable("NoitaCrashEvent",
-        std::to_string(reinterpret_cast<std::uintptr_t>(crash_event)).c_str());
+    char text_buffer[1024];
+
+    wsprintfA(text_buffer, "%lu", GetCurrentProcessId());
+    SetEnvironmentVariable("NoitaPID", text_buffer);
+
+    wsprintfA(text_buffer, "%p", reinterpret_cast<size_t>(&dump_info));
+    SetEnvironmentVariable("NoitaDumpPTR", text_buffer);
+
+    wsprintfA(text_buffer, "%p", reinterpret_cast<size_t>(crash_event));
+    SetEnvironmentVariable("NoitaCrashEvent", text_buffer);
 
     STARTUPINFOA startup_info{
         .cb = sizeof(startup_info),
@@ -70,9 +72,9 @@ void spawn_dumper_helper()
     );
 
     if (!create_proc_res)
-        std::cerr << "Couldn't create process: " << create_proc_res << "\n";
+        ;//std::cerr << "Couldn't create process: " << create_proc_res << "\n";
     else
-        std::cerr << "Dump process created!: " << create_proc_res << "\n";
+        ;//std::cerr << "Dump process created!: " << create_proc_res << "\n";
 
     dump_process = proc_info.hProcess;
     CloseHandle(proc_info.hThread);

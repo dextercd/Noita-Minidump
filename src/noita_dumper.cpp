@@ -33,12 +33,12 @@ const char* get_env(const char* envvar)
 }
 
 template<class T>
-T int_from_env(const char* envvar)
+T int_from_env(const char* envvar, int base=10)
 {
     auto envval = get_env(envvar);
 
     T value{};
-    auto result = std::from_chars(envval, envval + std::strlen(envval), value);
+    auto result = std::from_chars(envval, envval + std::strlen(envval), value, base);
     if (result.ec != std::errc{})
         throw std::system_error{std::make_error_code(result.ec)};
 
@@ -47,7 +47,7 @@ T int_from_env(const char* envvar)
 
 HANDLE read_env_handle(const char* envvar)
 {
-    auto handle_int = int_from_env<std::uintptr_t>(envvar);
+    auto handle_int = int_from_env<std::uintptr_t>(envvar, 16);
     return reinterpret_cast<HANDLE>(handle_int);
 }
 
@@ -101,7 +101,7 @@ void dump_process(
 
 void run()
 {
-    auto dump_info_ptr = int_from_env<std::uintptr_t>("NoitaDumpPTR");
+    auto dump_info_ptr = int_from_env<std::uintptr_t>("NoitaDumpPTR", 16);
     auto crash_event = read_env_handle("NoitaCrashEvent");
     auto process_id = int_from_env<DWORD>("NoitaPID");
 
