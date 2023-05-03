@@ -1,4 +1,6 @@
 <Mod
     name="Minidump"
     description="Create minidumps when Noita crashes."
-    request_no_api_restrictions="1" />
+    request_no_api_restrictions="1"
+    download_link="https://modworkshop.net/mod/38601"
+    />
