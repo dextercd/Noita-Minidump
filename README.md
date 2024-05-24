@@ -7,7 +7,7 @@ is not enabled for `Noita.exe`.
 This Noita mod enables crash dumps for any version of Noita. (GOG/
 Humble/Steam, including older versions.)
 
-Dumps are placed stored in `Noita/crashes/minidump_[YEAR-MONTH-DAY]T[TIME].dmp`.
+Dumps are placed in `Noita/crashes/minidump_[YEAR-MONTH-DAY]T[TIME].dmp`.
 
 
 ## Analysis
