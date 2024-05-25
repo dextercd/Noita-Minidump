@@ -16,7 +16,7 @@ LONG WINAPI noita_exception_handler(EXCEPTION_POINTERS* exception_pointers)
     SetEvent(crash_event);
     WaitForSingleObject(dump_process, 5000);
 
-    return EXCEPTION_CONTINUE_SEARCH;
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 void spawn_dumper_helper()
@@ -91,5 +91,4 @@ void init_minidump()
 
     spawn_dumper_helper();
     SetUnhandledExceptionFilter(noita_exception_handler);
-    AddVectoredExceptionHandler(1, noita_exception_handler);
 }
