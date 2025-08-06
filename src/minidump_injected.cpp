@@ -80,6 +80,21 @@ void spawn_dumper_helper()
     CloseHandle(proc_info.hThread);
 }
 
+using signal_handler = void(*)(int);
+using signal_f = signal_handler(*)(int, signal_handler);
+
+signal_handler previous_abort;
+
+extern "C"
+void on_abort(int sig)
+{
+    noita_exception_handler(nullptr);
+    if (previous_abort)
+        previous_abort(sig);
+
+    *(volatile int*)0 = 666;
+}
+
 extern "C" __declspec(dllexport)
 void init_minidump()
 {
@@ -91,4 +106,10 @@ void init_minidump()
 
     spawn_dumper_helper();
     SetUnhandledExceptionFilter(noita_exception_handler);
+
+    auto MSVCR120 = GetModuleHandleA("MSVCR120.DLL");
+    if (MSVCR120) {
+        auto signal = (signal_f)GetProcAddress(MSVCR120, "signal");
+        previous_abort = signal(22, on_abort);
+    }
 }

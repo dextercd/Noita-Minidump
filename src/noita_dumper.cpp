@@ -83,13 +83,20 @@ void dump_process(
     if (dmp_file == INVALID_HANDLE_VALUE)
         throw_windows_last_error("Couldn't open .dmp file");
 
-    MINIDUMP_EXCEPTION_INFORMATION exception_info{thread_id, exception_pointers, true};
+    MINIDUMP_EXCEPTION_INFORMATION exception_info{};
+    MINIDUMP_EXCEPTION_INFORMATION* exception_info_ptr{};
+    if (exception_pointers) {
+        exception_info = MINIDUMP_EXCEPTION_INFORMATION{thread_id, exception_pointers, true};
+        exception_info_ptr = &exception_info;
+    } else {
+        exception_info_ptr = nullptr;
+    }
 
     if (!MiniDumpWriteDump(
             process, process_id,
             dmp_file,
             MiniDumpWithDataSegs,
-            &exception_info,
+            exception_info_ptr,
             nullptr,
             nullptr)
     ) {
