@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.22)
 
 project(NoitaMinidump
     VERSION 1.2.0
+    DESCRIPTION "Noita Crash Handler"
+    HOMEPAGE_URL "https://github.com/dextercd/Noita-Minidump"
     LANGUAGES CXX C
 )
 
