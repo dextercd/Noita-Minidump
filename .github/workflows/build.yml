@@ -11,6 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug
+        shell: cmd
+        run: set
+
       - name: Create build
         shell: cmd
         run: |
