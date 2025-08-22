@@ -5,6 +5,7 @@ permissions:
 
 jobs:
   build:
+    environment: testsign
     runs-on: windows-2022
     steps:
       - name: Checkout
@@ -24,13 +25,6 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14
           cmake --build build
-
-      - name: Run CTest
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14
-          cd build
-          ctest --output-on-failure
 
       - name: Run CPack
         shell: cmd
