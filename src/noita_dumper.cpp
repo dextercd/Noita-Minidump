@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <cstdint>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
