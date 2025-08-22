@@ -5,7 +5,7 @@ permissions:
 
 jobs:
   build:
-    environment: testsign
+    environment: ${{ true && 'testsign' || null }}
     env:
       HT_ENDPOINT: ${{ vars.HT_ENDPOINT }}
       HT_SIGNING_PROFILE: ${{ vars.HT_SIGNING_PROFILE }}
