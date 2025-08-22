@@ -17,7 +17,7 @@ include(FetchContent)
 FetchContent_Declare(
     Handtokening_CMake
     GIT_REPOSITORY https://github.com/dextercd/Handtokening-CMake.git
-    GIT_TAG 277c6fcd0cebec707d43d10b783c9b42a660984c
+    GIT_TAG bd8a1d54cfa8e84763399163dd09ca27d0a63fb8
 )
 FetchContent_MakeAvailable(Handtokening_CMake)
 
